@@ -13,9 +13,6 @@ int triggerPin = 2;       // switch input pin
 int ES1 = 3;              //pin for incrementing midi note # (or midi status byte)
 int ES2 = 4;              //pin for decrementing midi note # (or midi status byte)
 
-int readTrigger;           // value for ch1 stomp switch
-int pReadTrigger = HIGH;  // previous reading from stomp switch
-
 int readES1;            //reading for ES1 IO pin
 int readES2;            //reading for ES2 IO pin
 
@@ -23,13 +20,14 @@ int pReadES1 = HIGH;      //previous reading for ES1 pin
 int pReadES2 = HIGH;      //previous reading for ES1 pin
 
 int BPM = 120;
-char noteStr[3];    //character array of note int, used for printing
-char ch1Msg[] = "BPM:"; //prefix for screen message indicating which note
+char ch1Msg[30];
 char *msgPtr = new char[12]; //message displayed on screen
+
 
 long time = 0;         
 long debounce = 100;   //millisecond debounce
-double timeDelay = 20.83; //millisecond version of 1/24th of a quarter note at 120 BPM
+float timeDelay = 20.95; //millisecond version of 1/24th of a quarter note at 120 BPM
+int intTimeDelay = timeDelay * 100;
 bool play = false;
 
 void setup()
@@ -56,9 +54,10 @@ void setup()
 
 void loop()
 {
-  sprintf(noteStr,"%d",BPM);
+
+  sprintf(ch1Msg,"TimeDelay: %d",intTimeDelay);
   strcpy(msgPtr, ch1Msg);
-  strcat(msgPtr,noteStr);
+  //strcat(msgPtr,noteStr);
 
   
   oled.setTextXY(0,0);
@@ -79,6 +78,7 @@ void loop()
    ///////////////////////////////////////////////////////////////////////////
   if (readES2 == HIGH && pReadES2 == LOW && millis() - time > debounce) {
     BPM--;
+    timeDelay = updateMidiTimeDelay(BPM);
     time = millis(); //update current time variable
   }
 
@@ -88,6 +88,7 @@ void loop()
    ////////////////////////////////////////////////////////////////////////////
   if(readES1 == HIGH && pReadES1 == LOW && millis() - time > debounce) {
     BPM++;
+    timeDelay = updateMidiTimeDelay(BPM);
     time = millis(); //update current time variable
   }
 
@@ -98,7 +99,11 @@ void loop()
   
 }
 
-
+float updateMidiTimeDelay(int BPM){
+  float newTime = BPM/6;
+  intTimeDelay = newTime * 100;
+   return newTime;
+}
 
 void sendStart(){
   Serial.write(251);
