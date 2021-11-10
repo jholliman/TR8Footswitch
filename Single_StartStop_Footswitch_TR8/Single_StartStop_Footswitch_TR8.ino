@@ -22,9 +22,9 @@ int readES2;            //reading for ES2 IO pin
 int pReadES1 = HIGH;      //previous reading for ES1 pin
 int pReadES2 = HIGH;      //previous reading for ES1 pin
 
-int note = 59;    //midi note to play
+int BPM = 120;
 char noteStr[3];    //character array of note int, used for printing
-char ch1Msg[] = "note:"; //prefix for screen message indicating which note
+char ch1Msg[] = "BPM:"; //prefix for screen message indicating which note
 char *msgPtr = new char[12]; //message displayed on screen
 
 long time = 0;         
@@ -34,17 +34,15 @@ bool play = false;
 
 void setup()
 {
+  Wire.begin();  
+  oled.init(); 
+  
   pinMode(LEDPin, OUTPUT);
   pinMode(triggerPin, INPUT);
   pinMode(ES1, INPUT);
   pinMode(ES2, INPUT);
   attachInterrupt(digitalPinToInterrupt(triggerPin), footswitchInterupt, RISING);
-
-
   
-  Wire.begin();  
-  oled.init(); 
-
   oled.clearDisplay();              
   oled.setTextXY(0,0);             
   oled.putString("initializing");
@@ -58,7 +56,7 @@ void setup()
 
 void loop()
 {
-  sprintf(noteStr,"%d",note);
+  sprintf(noteStr,"%d",BPM);
   strcpy(msgPtr, ch1Msg);
   strcat(msgPtr,noteStr);
 
@@ -66,7 +64,6 @@ void loop()
   oled.setTextXY(0,0);
   oled.putString(msgPtr);  
     
-  //readTrigger = digitalRead(triggerPin);
   readES1 = digitalRead(ES1);
   readES2 = digitalRead(ES2);
   
@@ -75,40 +72,13 @@ void loop()
     sendTimeClock();
     delay(timeDelay);
   }
-  //sendStop();
   
  
-     /*
-  // if trigger switch engaged
-  /////////////////////////////////////////////////////////////////////////////
-  if (readTrigger == HIGH && pReadTrigger == LOW && millis() - time > debounce) {
-    
-    //if midi is currently holding a note, turn the note off
-    if (stateLED == HIGH){
-      stateLED = LOW;
-      sendStop();
-      oled.setTextXY(1,0);
-      oled.putString("midi off");
-    }
-
-    //if midi is currently off, turn a note on
-    else
-    {
-      stateLED = HIGH;   
-      play=true;
-      oled.setTextXY(1,0);
-      oled.putString("midi on ");
-
-    }
-  time = millis(); //update current time variable
-  }
-  */
-
    //if ES1 (edit switch 1) engaged
    // decrement midi note one half step and display screen accordingly
    ///////////////////////////////////////////////////////////////////////////
   if (readES2 == HIGH && pReadES2 == LOW && millis() - time > debounce) {
-    note = note - 1;
+    BPM--;
     time = millis(); //update current time variable
   }
 
@@ -117,19 +87,17 @@ void loop()
    // increment midi note one half step and display screen accordingly
    ////////////////////////////////////////////////////////////////////////////
   if(readES1 == HIGH && pReadES1 == LOW && millis() - time > debounce) {
-    note++;
+    BPM++;
     time = millis(); //update current time variable
   }
 
   
 
-
-  //digitalWrite(LEDPin, stateLED);
-  //pReadTrigger = readTrigger;
   pReadES1 = readES1;
   pReadES2 = readES2;
   
 }
+
 
 
 void sendStart(){
