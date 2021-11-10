@@ -30,13 +30,16 @@ long time = 0;
 long debounce = 100;   //millisecond debounce
 double timeDelay = 20.83; //millisecond version of 1/24th of a quarter note at 120 BPM
 bool play = false;
+
 void setup()
 {
+  pinMode(LEDPin, OUTPUT);
   pinMode(triggerPin, INPUT);
   pinMode(ES1, INPUT);
   pinMode(ES2, INPUT);
-  
-  pinMode(LEDPin, OUTPUT);
+  attachInterrupt(digitalPinToInterrupt(triggerPin), footswitchInterupt, CHANGE);
+
+
   
   Wire.begin();  
   oled.init(); 
@@ -66,12 +69,12 @@ void loop()
   readES1 = digitalRead(ES1);
   readES2 = digitalRead(ES2);
   
-  while(play==true){
+ while(play==true){
     sendStart();
     sendTimeClock();
     delay(timeDelay);
   }
-  sendStop();
+  //sendStop();
   
 
   // if trigger switch engaged
@@ -140,4 +143,7 @@ void sendStop(){
 }
 void sendTimeClock(){
   Serial.write(248);
+}
+void footswitchInterupt(){
+  play = !play;
 }
