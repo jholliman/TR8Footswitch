@@ -4,6 +4,7 @@
 #include <Wire.h>
 #include "ACROBOTIC_SSD1306.h"
 
+unsigned long lastInterupt = 0;
 
 int LEDPin = 13;       // LED output pin
 int stateLED = LOW; //current state of LED
@@ -37,7 +38,7 @@ void setup()
   pinMode(triggerPin, INPUT);
   pinMode(ES1, INPUT);
   pinMode(ES2, INPUT);
-  attachInterrupt(digitalPinToInterrupt(triggerPin), footswitchInterupt, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(triggerPin), footswitchInterupt, RISING);
 
 
   
@@ -65,7 +66,7 @@ void loop()
   oled.setTextXY(0,0);
   oled.putString(msgPtr);  
     
-  readTrigger = digitalRead(triggerPin);
+  //readTrigger = digitalRead(triggerPin);
   readES1 = digitalRead(ES1);
   readES2 = digitalRead(ES2);
   
@@ -76,7 +77,8 @@ void loop()
   }
   //sendStop();
   
-
+ 
+     /*
   // if trigger switch engaged
   /////////////////////////////////////////////////////////////////////////////
   if (readTrigger == HIGH && pReadTrigger == LOW && millis() - time > debounce) {
@@ -100,9 +102,8 @@ void loop()
     }
   time = millis(); //update current time variable
   }
- 
-     /*
-   // if ES1 (edit switch 1) engaged
+
+   //if ES1 (edit switch 1) engaged
    // decrement midi note one half step and display screen accordingly
    ///////////////////////////////////////////////////////////////////////////
   if (readES2 == HIGH && pReadES2 == LOW && millis() - time > debounce) {
@@ -129,12 +130,7 @@ void loop()
   */
 }
 
-//send midi command
-void midiTx(int cmd, int pitch, int velocity) {
-  Serial.write(cmd);
-  Serial.write(pitch);
-  Serial.write(velocity);
-}
+
 void sendStart(){
   Serial.write(251);
 }
@@ -145,5 +141,11 @@ void sendTimeClock(){
   Serial.write(248);
 }
 void footswitchInterupt(){
-  play = !play;
+
+  if (millis() - lastInterupt > 400) {
+  
+    play = !play;
+    lastInterupt = millis(); //update current time variable
+  }
+
 }
