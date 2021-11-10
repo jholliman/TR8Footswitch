@@ -22,7 +22,7 @@ int readES2;            //reading for ES2 IO pin
 int pReadES1 = HIGH;      //previous reading for ES1 pin
 int pReadES2 = HIGH;      //previous reading for ES1 pin
 
-int note = 60;    //midi note to play
+int note = 59;    //midi note to play
 char noteStr[3];    //character array of note int, used for printing
 char ch1Msg[] = "note:"; //prefix for screen message indicating which note
 char *msgPtr = new char[12]; //message displayed on screen
@@ -102,6 +102,7 @@ void loop()
     }
   time = millis(); //update current time variable
   }
+  */
 
    //if ES1 (edit switch 1) engaged
    // decrement midi note one half step and display screen accordingly
@@ -123,11 +124,11 @@ void loop()
   
 
 
-  digitalWrite(LEDPin, stateLED);
-  pReadTrigger = readTrigger;
+  //digitalWrite(LEDPin, stateLED);
+  //pReadTrigger = readTrigger;
   pReadES1 = readES1;
   pReadES2 = readES2;
-  */
+  
 }
 
 
@@ -143,7 +144,7 @@ void sendTimeClock(){
 void footswitchInterupt(){
 
   if (millis() - lastInterupt > 400) {
-  
+   
     play = !play;
     lastInterupt = millis(); //update current time variable
   }
