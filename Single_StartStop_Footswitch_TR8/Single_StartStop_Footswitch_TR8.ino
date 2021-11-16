@@ -26,8 +26,8 @@ char *msgPtr = new char[12]; //message displayed on screen
 
 long time = 0;         
 long debounce = 100;   //millisecond debounce
-float timeDelay = 20.95; //millisecond version of 1/24th of a quarter note at 120 BPM
-int intTimeDelay = timeDelay * 100;
+float clockMsgDelay = 20.95; //millisecond version of 1/24th of a quarter note at 120 BPM
+int intTimeDelay = clockMsgDelay * 100;
 bool play = false;
 
 void setup()
@@ -55,7 +55,7 @@ void setup()
 void loop()
 {
 
-  sprintf(ch1Msg,"TimeDelay: %d",intTimeDelay);
+  sprintf(ch1Msg,"TimeDelay: %d",BPM);
   strcpy(msgPtr, ch1Msg);
   //strcat(msgPtr,noteStr);
 
@@ -69,7 +69,7 @@ void loop()
  while(play==true){
     sendStart();
     sendTimeClock();
-    delay(timeDelay);
+    delay(clockMsgDelay);
   }
   
  
@@ -78,7 +78,7 @@ void loop()
    ///////////////////////////////////////////////////////////////////////////
   if (readES2 == HIGH && pReadES2 == LOW && millis() - time > debounce) {
     BPM--;
-    timeDelay = updateMidiTimeDelay(BPM);
+    updateMidiTimeDelay();
     time = millis(); //update current time variable
   }
 
@@ -88,7 +88,7 @@ void loop()
    ////////////////////////////////////////////////////////////////////////////
   if(readES1 == HIGH && pReadES1 == LOW && millis() - time > debounce) {
     BPM++;
-    timeDelay = updateMidiTimeDelay(BPM);
+    updateMidiTimeDelay();
     time = millis(); //update current time variable
   }
 
@@ -98,11 +98,12 @@ void loop()
   pReadES2 = readES2;
   
 }
+void updateMidiTimeDelay(){
+  
+  clockMsgDelay = ((1/(static_cast<float>(BPM)/60))/24)*1000;//length of one beat in Seconds. (length of one quarter note)
 
-float updateMidiTimeDelay(int BPM){
-  float newTime = BPM/6;
-  intTimeDelay = newTime * 100;
-   return newTime;
+  intTimeDelay = clockMsgDelay * 100;
+
 }
 
 void sendStart(){
