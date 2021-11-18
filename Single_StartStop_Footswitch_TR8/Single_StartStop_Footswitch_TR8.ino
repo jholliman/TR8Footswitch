@@ -30,7 +30,7 @@ char *msgPtr = new char[12]; //message displayed on screen
 int currentStateCLK;
 int lastStateCLK;
 
-long lastMidiMsg = 0;
+//unsigned long lastMidiMsg = 0;
 long unsigned lastUpdateOled;
 long time = 0;         
 long debounce = 100;   //millisecond debounce
@@ -84,10 +84,13 @@ void loop()
   readES2 = digitalRead(ES2);
 */  
  while(play==true){
-    sendStart();
-      sendTimeClock();
-      delay(clockMsgDelay);
-  
+  //if(millis() - lastMidiMsg > clockMsgDelay){
+      
+      //lastMidiMsg = millis();
+ // }   
+  sendStart();
+     sendTimeClock();
+     delay(clockMsgDelay);
   }
 
 
@@ -119,42 +122,13 @@ void loop()
     lastUpdateOled = millis();
   }
 
-
-  /*
- 
-   //if ES1 (edit switch 1) engaged
-   // decrement midi note one half step and display screen accordingly
-   ///////////////////////////////////////////////////////////////////////////
-  if (readES2 == HIGH && pReadES2 == LOW && millis() - time > debounce) {
-    BPM--;
-    updateMidiTimeDelay();
-    time = millis(); //update current time variable
-  }
-
-  
-   // if ES0 (edit switch 0) engaged
-   // increment midi note one half step and display screen accordingly
-   ////////////////////////////////////////////////////////////////////////////
-  if(readES1 == HIGH && pReadES1 == LOW && millis() - time > debounce) {
-    BPM++;
-    updateMidiTimeDelay();
-    time = millis(); //update current time variable
-  }
-
-  
-
-  pReadES1 = readES1;
-  pReadES2 = readES2;
-    */
   delay(2);
 
   
 }
 void updateMidiTimeDelay(){
   
-  clockMsgDelay = ((1.0/(static_cast<float>(BPM)/60.0))/24.0)*1000.0;//length of one beat in Seconds. (length of one quarter note)
-
-  intTimeDelay = clockMsgDelay * 100;
+  clockMsgDelay = ((1.0/(static_cast<float>(BPM)/60.0))/24.0)*1000;//length of one beat in Seconds. (length of one quarter note)
 
 }
 
