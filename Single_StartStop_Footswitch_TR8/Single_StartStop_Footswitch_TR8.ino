@@ -77,8 +77,8 @@ void loop()
   //strcat(msgPtr,noteStr);
 
   
-  oled.setTextXY(0,0);
-  oled.putString(msgPtr);  
+  //oled.setTextXY(0,0);
+  //oled.putString(msgPtr);  
 /*    
   readES1 = digitalRead(ES1);
   readES2 = digitalRead(ES2);
@@ -128,7 +128,7 @@ void loop()
 }
 void updateMidiTimeDelay(){
   
-  clockMsgDelay = ((1.0/(static_cast<float>(BPM)/60.0))/24.0)*1000;//length of one beat in Seconds. (length of one quarter note)
+  clockMsgDelay = ((1/(static_cast<float>(BPM)/60))/24)*1000;//length of one beat in Seconds. (length of one quarter note)
 
 }
 
