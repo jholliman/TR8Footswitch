@@ -13,31 +13,26 @@ int LEDPin = 13;       // LED output pin
 int stateLED = LOW; //current state of LED
 
 int triggerPin = 2;       // switch input pin 
-int ES1 = 3;              //pin for incrementing midi note # (or midi status byte)
-int ES2 = 4;              //pin for decrementing midi note # (or midi status byte)
-
-int readES1;            //reading for ES1 IO pin
-int readES2;            //reading for ES2 IO pin
-
-int pReadES1 = HIGH;      //previous reading for ES1 pin
-int pReadES2 = HIGH;      //previous reading for ES1 pin
 
 
 int BPM = 120;
 char ch1Msg[30];
+char ch2Msg[20];
 char *msgPtr = new char[12]; //message displayed on screen
 
 int currentStateCLK;
 int lastStateCLK;
 
-//unsigned long lastMidiMsg = 0;
+int currentStateSW;
+int lastStateSW;
+
 long unsigned lastUpdateOled;
 long time = 0;         
 long debounce = 100;   //millisecond debounce
 float clockMsgDelay = 20.95; //millisecond version of 1/24th of a quarter note at 120 BPM
 int intTimeDelay = clockMsgDelay * 100;
 bool play = false;
-
+bool fineEdit = false;
 void setup()
 {
   Wire.begin();  
@@ -45,8 +40,7 @@ void setup()
   
   pinMode(LEDPin, OUTPUT);
   pinMode(triggerPin, INPUT);
-  //pinMode(ES1, INPUT);
-  //pinMode(ES2, INPUT);
+
   attachInterrupt(digitalPinToInterrupt(triggerPin), footswitchInterupt, RISING);
 
   // Set encoder pins as inputs
@@ -62,7 +56,8 @@ void setup()
   oled.setTextXY(0,0);             
   oled.putString("initializing");
   delay(500);
-  Serial.begin(31250);// Set MIDI baud rate:
+  //Serial.begin(31250);// Set MIDI baud rate:
+  Serial.begin(9600);// for serial printing debug stuff
   oled.setTextXY(1,0);             
   oled.putString("init midi port");
   delay(500);
@@ -72,28 +67,25 @@ void setup()
 void loop()
 {
 
-  //sprintf(ch1Msg,"TimeDelay: %d",BPM);
-  //strcpy(msgPtr, ch1Msg);
-  //strcat(msgPtr,noteStr);
-
   
-  //oled.setTextXY(0,0);
-  //oled.putString(msgPtr);  
-/*    
-  readES1 = digitalRead(ES1);
-  readES2 = digitalRead(ES2);
-*/  
  while(play==true){
-  //if(millis() - lastMidiMsg > clockMsgDelay){
-      
-      //lastMidiMsg = millis();
- // }   
-  sendStart();
+ 
+     sendStart();
      sendTimeClock();
      delay(clockMsgDelay);
   }
 
+  //read push button
+  //////////////////
+  currentStateSW = digitalRead(SW);
+  if(currentStateSW != lastStateSW && currentStateSW == 1){
+    
+    fineEdit = !fineEdit;//toggle the fine/coarse editing mode
+    Serial.print("clicked");
+  }
+  lastStateSW = currentStateSW;
 
+  
   //read rotary encoder
   ////////////////////////////////
     // Read the current state of CLK
@@ -115,9 +107,20 @@ void loop()
 
   
   if (millis() - lastUpdateOled > 200){
-    oled.setTextXY(0,0);
+    
     sprintf(ch1Msg,"BPM: %d  ", BPM);
+    if (fineEdit == true){
+      sprintf(ch2Msg, "fine adj mode  ");
+    }
+    else{
+      sprintf(ch2Msg, "coarse adj mode");
+    }
+    
+    oled.setTextXY(2,0);
     oled.putString((const char *)&ch1Msg);  
+    oled.setTextXY(3,0);
+    oled.putString((const char *)&ch2Msg);  
+
     updateMidiTimeDelay();
     lastUpdateOled = millis();
   }
