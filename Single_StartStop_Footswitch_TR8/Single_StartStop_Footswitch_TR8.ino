@@ -15,7 +15,7 @@ int stateLED = LOW; //current state of LED
 int triggerPin = 2;       // switch input pin 
 
 
-int BPM = 120;
+double BPM = 120.00;
 char ch1Msg[30];
 char ch2Msg[20];
 char *msgPtr = new char[12]; //message displayed on screen
@@ -27,12 +27,12 @@ int currentStateSW;
 int lastStateSW;
 
 long unsigned lastUpdateOled;
-long time = 0;         
-long debounce = 100;   //millisecond debounce
+long lastRotate;
 float clockMsgDelay = 20.95; //millisecond version of 1/24th of a quarter note at 120 BPM
 int intTimeDelay = clockMsgDelay * 100;
 bool play = false;
 bool fineEdit = false;
+double BPMdecimal;//this is a hack to display doubles on screen
 void setup()
 {
   Wire.begin();  
@@ -56,8 +56,8 @@ void setup()
   oled.setTextXY(0,0);             
   oled.putString("initializing");
   delay(500);
-  //Serial.begin(31250);// Set MIDI baud rate:
-  Serial.begin(9600);// for serial printing debug stuff
+  Serial.begin(31250);// Set MIDI baud rate:
+  //Serial.begin(9600);// for serial printing debug stuff
   oled.setTextXY(1,0);             
   oled.putString("init midi port");
   delay(500);
@@ -79,9 +79,7 @@ void loop()
   //////////////////
   currentStateSW = digitalRead(SW);
   if(currentStateSW != lastStateSW && currentStateSW == 1){
-    
     fineEdit = !fineEdit;//toggle the fine/coarse editing mode
-    Serial.print("clicked");
   }
   lastStateSW = currentStateSW;
 
@@ -90,16 +88,37 @@ void loop()
   ////////////////////////////////
     // Read the current state of CLK
   currentStateCLK = digitalRead(CLK);
+  
   // If last and current state of CLK are different, then pulse occurred
   // React to only 1 state change to avoid double count
-  if (currentStateCLK != lastStateCLK && currentStateCLK == 1){
+  if (currentStateCLK != lastStateCLK && currentStateCLK == 1 && (millis()-lastRotate) > 40 ){
     // If the DT state is different than the CLK state then
     // the encoder is rotating CCW so decrement
     if (digitalRead(DT) != currentStateCLK) {
-      BPM --;
-    } else {
+      
       // Encoder is rotating CW so increment
-      BPM ++;
+        if(fineEdit == true)
+        {
+          BPM = BPM + 0.1;
+        }
+        else
+        {
+          BPM ++;
+        }
+      lastRotate = millis();
+    } 
+    else {
+      
+      if(fineEdit == true)
+      {
+        BPM = BPM - 0.1;
+      }
+      else
+      {
+        BPM --;
+      }
+      lastRotate = millis();
+
     }
   }
   // Remember last CLK state
@@ -107,18 +126,26 @@ void loop()
 
   
   if (millis() - lastUpdateOled > 200){
+
+    //can't find a way to print floats/doubles to the SSD1306, 
+    //so everything to the right of the decimal place is another int
     
-    sprintf(ch1Msg,"BPM: %d  ", BPM);
+    BPMdecimal = (BPM - floor(BPM))*100;//values to right of decimal place, times 100 to make integer looking
+
+    sprintf(ch1Msg,"BPM: %d.%d", static_cast<int>(BPM),static_cast<int>(BPMdecimal));
+
+    
     if (fineEdit == true){
       sprintf(ch2Msg, "fine adj mode  ");
     }
     else{
       sprintf(ch2Msg, "coarse adj mode");
     }
-    
+    oled.setTextXY(1,0);
+    oled.putString("MIDI CLOCK OUT");  
     oled.setTextXY(2,0);
     oled.putString((const char *)&ch1Msg);  
-    oled.setTextXY(3,0);
+    oled.setTextXY(4,0);
     oled.putString((const char *)&ch2Msg);  
 
     updateMidiTimeDelay();
@@ -131,7 +158,7 @@ void loop()
 }
 void updateMidiTimeDelay(){
   
-  clockMsgDelay = ((1/(static_cast<float>(BPM)/60))/24)*1000;//length of one beat in Seconds. (length of one quarter note)
+  clockMsgDelay = ((1/(static_cast<double>(BPM)/60))/24)*1000;//length of one beat in Seconds. (length of one quarter note)
 
 }
 
