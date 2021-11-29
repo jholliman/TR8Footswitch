@@ -29,7 +29,6 @@ int lastStateSW;
 long unsigned lastUpdateOled;
 long lastRotate;
 float clockMsgDelay = 20.95; //millisecond version of 1/24th of a quarter note at 120 BPM
-int intTimeDelay = clockMsgDelay * 100;
 bool play = false;
 bool fineEdit = false;
 double BPMdecimal;//this is a hack to display doubles on screen
@@ -56,8 +55,8 @@ void setup()
   oled.setTextXY(0,0);             
   oled.putString("initializing");
   delay(500);
-  Serial.begin(31250);// Set MIDI baud rate:
-  //Serial.begin(9600);// for serial printing debug stuff
+  //Serial.begin(31250);// Set MIDI baud rate:
+  Serial.begin(9600);// for serial printing debug stuff
   oled.setTextXY(1,0);             
   oled.putString("init midi port");
   delay(500);
@@ -150,6 +149,9 @@ void loop()
 
     updateMidiTimeDelay();
     lastUpdateOled = millis();
+    Serial.print("  ");
+    Serial.print(clockMsgDelay);
+    Serial.print(" ");
   }
 
   delay(2);
@@ -158,7 +160,7 @@ void loop()
 }
 void updateMidiTimeDelay(){
   
-  clockMsgDelay = ((1/(static_cast<double>(BPM)/60))/24)*1000;//length of one beat in Seconds. (length of one quarter note)
+  clockMsgDelay = ((1.0f/(BPM/60.0f))/24.0f)*1000.00f;//length of one beat in Seconds. (length of one quarter note)
 
 }
 
