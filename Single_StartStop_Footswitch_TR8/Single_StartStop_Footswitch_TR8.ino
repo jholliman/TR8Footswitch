@@ -55,8 +55,8 @@ void setup()
   oled.setTextXY(0,0);             
   oled.putString("initializing");
   delay(500);
-  //Serial.begin(31250);// Set MIDI baud rate:
-  Serial.begin(9600);// for serial printing debug stuff
+  Serial.begin(31250);// Set MIDI baud rate:
+  //Serial.begin(9600);// for serial printing debug stuff
   oled.setTextXY(1,0);             
   oled.putString("init midi port");
   delay(500);
@@ -98,7 +98,7 @@ void loop()
       // Encoder is rotating CW so increment
         if(fineEdit == true)
         {
-          BPM = BPM + 0.1;
+          BPM = BPM + 0.01;
         }
         else
         {
@@ -110,7 +110,7 @@ void loop()
       
       if(fineEdit == true)
       {
-        BPM = BPM - 0.1;
+        BPM = BPM - 0.01;
       }
       else
       {
@@ -123,17 +123,54 @@ void loop()
   // Remember last CLK state
   lastStateCLK = currentStateCLK;
 
-  
+  //this is where we update the screen, and do some logic related to converting the double BPM into
+  //something we can actually print
+  /////////////////////////////////
   if (millis() - lastUpdateOled > 200){
 
     //can't find a way to print floats/doubles to the SSD1306, 
-    //so everything to the right of the decimal place is another int
-    
+    //so everything to the right of the decimal place is another int that we print
     BPMdecimal = (BPM - floor(BPM))*100;//values to right of decimal place, times 100 to make integer looking
-
-    sprintf(ch1Msg,"BPM: %d.%d", static_cast<int>(BPM),static_cast<int>(BPMdecimal));
-
     
+    sprintf(ch1Msg,"BPM: %d.%d", static_cast<int>(BPM),static_cast<int>(BPMdecimal));
+    
+    //if the decimal portion of BPM is less than 0.10, add another 0 in front - this forces the screen
+    //to rewrite both tens and hundreths place, otherwise screen places the hundreths place in the 
+    //tens place 
+    /*
+    if(BPMdecimal < 10){
+
+      //find decimal place
+      char decimal = '.';
+      bool found = false;
+      int i = 0;
+      int hundreths;
+      while (found == false){
+        if (strcmp((const char *)&ch1Msg[i],(const char *)&decimal) == 0){
+         found = true;
+         //Serial.print(" found: ");
+         //Serial.print(ch1Msg[i]);
+         //Serial.print(" at: ");
+         //Serial.print(i);
+         
+
+        }
+        else{
+          i++;
+
+        }
+      }
+
+
+      
+      //insert 0 in after decimal place, then push the hundreths place back one place
+      hundreths = (i+1); //this is location of hundreths place value
+      //ch1Msg[i+2] = *(strchr((const char *)&ch1Msg,46)+1) ;
+      //
+      //*(strchr((const char *)&ch1Msg,46)+1) = '0'; 
+    }
+     */
+
     if (fineEdit == true){
       sprintf(ch2Msg, "fine adj mode  ");
     }
@@ -149,15 +186,18 @@ void loop()
 
     updateMidiTimeDelay();
     lastUpdateOled = millis();
+    //Serial.print(ch1Msg);
+
     Serial.print("  ");
     Serial.print(clockMsgDelay);
     Serial.print(" ");
-  }
-
-  delay(2);
-
-  
+  }  
 }
+
+
+
+
+
 void updateMidiTimeDelay(){
   
   clockMsgDelay = ((1.0f/(BPM/60.0f))/24.0f)*1000.00f;//length of one beat in Seconds. (length of one quarter note)
